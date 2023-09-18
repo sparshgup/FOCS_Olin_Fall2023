@@ -6,9 +6,9 @@ HOMEWORK 1
 
 Due: Thu, Sep 21, 2023 (23h59)
 
-Name:
+Name: Sparsh Gupta
 
-Email:
+Email: sgupta1@olin.edu
 
 Remarks, if any:
 
@@ -36,82 +36,104 @@ before submitting it. It has to load without any errors.
 -- QUESTION 1
 
 clamp :: Float -> Float -> Float -> Float
-clamp a b c =
-  error "Not implemented"
+clamp a b c
+  | c < min a b = min a b
+  | c > max a b = max a b
+  | otherwise   = c
 
 
 interpolate :: Float -> Float -> Float -> Float
 interpolate a b c =
-  error "Not implemented"
+  a + (b - a) * c
 
 
 -- QUESTION 2
 
 
 pairDouble :: [Int] -> [(Int, Int)]
-pairDouble xs =
-  error "Not implemented"
+pairDouble xs = [(x, 2 * x) | x <- xs]
 
 
 cap :: Int -> [Int] -> [Int]
-cap m xs =
-  error "Not implemented"
+cap m xs = [min x m | x <- xs]
 
 
 prefix :: String -> [String] -> [String]
-prefix s xs =
-  error "Not implemented"
+prefix s xs = [s ++ x | x <- xs]
 
 
-longerThan :: [String] -> [String]
-longerThan xs =
-  error "Not implemented"
+longerThan :: Int -> [String] -> [String]
+longerThan n xs = [x | x <- xs, length x >= n]
 
 
 within :: Int -> Int -> [Int] -> [Int]
-within a b xs =
-  error "Not implemented"
+within a b xs = [x | x <- xs, a <= x && x <= b]
 
 
 split :: Int -> [Int] -> ([Int], [Int])
-split s xs =
-  error "Not implemented"
+split s xs = 
+  case xs of 
+    [] -> ([],[])
+    (x:xs')
+      | x <= s    -> (x : lesser, greater)
+      | otherwise -> (lesser, x : greater)
+      where
+        (lesser, greater) = split s xs'
 
 
 find :: Int -> [(Int, a)] -> a -> a
 find n xs def =
-  error "Not implemented"
+  case xs of
+    []           -> def
+    ((x, y):xs') -> if n == x then y else find n xs' def
 
 
 -- QUESTION 3
 
 vScale :: Float -> [Float] -> [Float]
-vScale a v =
-  error "Not implemented"
+vScale a v
+  | length v /= length (map (* a) v) = error "vector lengths do not match."
+  | otherwise = map (* a) v
 
 
 vAdd :: [Float] -> [Float] -> [Float]
 vAdd v w =
-  error "Not implemented"
+  case (v, w) of
+    ([], [])     -> []
+    (x:xs, y:ys) -> x + y : vAdd xs ys
+    _            -> error "vector lengths do not match."
 
 
 vInner :: [Float] -> [Float] -> Float
 vInner v w =
-  error "Not implemented"
+  case (v, w) of
+    ([], [])     -> 0.0
+    (x:xs, y:ys) -> x * y + vInner xs ys
+    _            -> error "vector lengths do not match."
 
 
 vLength :: [Float] -> Float
-vLength v =
-  error "Not implemented"
+vLength v = sqrt (sumSquares v)
+
+
+sumSquares :: [Float] -> Float -- Helper function for vLength 
+sumSquares xs =
+  case xs of
+    []      -> 0.0
+    (x:xs') -> x * x +sumSquares xs'
 
 
 -- QUESTION 4
 
 repeatStr :: String -> Int -> String
-repeatStr s n =
-  error "Not implemented"
-
+repeatStr s n 
+  | n <= 0 = ""
+  | otherwise = s ++ repeatStr s (n - 1)
+  
 
 collatzSeq :: Int -> [Int]
-collatzSeq n =
-  error "Not implemented"
+collatzSeq n
+  | n <= 0    = []
+  | n == 1    = [1]
+  | even n    = n : collatzSeq (n `div` 2)
+  | otherwise = n : collatzSeq (3 * n + 1)
