@@ -30,7 +30,15 @@ before submitting it. It has to load without any errors.
 --------------------------------------------------
 
 -}
-
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+import GHC.Exts.Heap (GenClosure(fun))
+{-# HLINT ignore "Use camelCase" #-}
+{-# HLINT ignore "Use when" #-}
+{-# HLINT ignore "Redundant bracket" #-}
+{-# HLINT ignore "Use putStrLn" #-}
+{-# HLINT ignore "Use guards" #-}
+{-# HLINT ignore "Avoid lambda" #-}
+{-# HLINT ignore "Replace case with fromMaybe" #-}
 
 
 {-
@@ -97,23 +105,26 @@ faStartaEndc = FA { states = [0, 1, 2, 99],
 
 
 isFinal :: [Int] -> Int -> Bool
-isFinal xs s =
-  error "Not implemented"
+isFinal xs s = s `elem` xs
 
 
 followSymbol :: [(Int, Char, Int)] -> Int -> Char -> Int
-followSymbol trs q sym =
-  error "Not implemented"
+followSymbol [] _ _ = error "incomplete automaton"
+followSymbol ((q1, sym1, q2):trs) q sym
+  | q == q1 && sym == sym1 = q2 
+  | otherwise = followSymbol trs q sym
 
 
 followString :: [(Int, Char, Int)] -> Int -> [Char] -> Int
-followString trs q syms =
-  error "Not implemented"
-
+followString [] _ [] = error "incomplete automaton"
+followString trs q [] = q
+followString trs q (s:syms) =
+  let nextState = followSymbol trs q s
+  in followString trs nextState syms
+  
 
 accept :: FA -> String -> Bool
-accept m input =
-  error "Not implemented"
+accept m input = isFinal (final m) (followString (delta m) (start m) input)
 
 
 
@@ -128,23 +139,133 @@ dummy = FA { states = [0],
            }
 
 fa_part_a :: FA
-fa_part_a = dummy
+fa_part_a = FA { states = [0, 1, 2],
+                 alphabet = ['a', 'b', 'c'],
+                 delta = [(0, 'a', 1),
+                          (0, 'b', 1),
+                          (0, 'c', 1),
+                          (1, 'a', 2),
+                          (1, 'b', 2),
+                          (1, 'c', 2),
+                          (2, 'a', 0),
+                          (2, 'b', 0),
+                          (2, 'c', 0)],
+                 start = 0,
+                 final = [0, 1]
+               }
 
 
 fa_part_b :: FA
-fa_part_b = dummy
+fa_part_b = FA { states = [0, 1, 2, 3, 4, 5],
+                 alphabet = ['a', 'b', 'c'],
+                 delta = [(0, 'a', 1),
+                          (0, 'b', 5),
+                          (0, 'c', 0),
+                          (1, 'a', 2),
+                          (1, 'b', 5),
+                          (1, 'c', 1),
+                          (2, 'a', 3),
+                          (2, 'b', 5),
+                          (2, 'c', 2),
+                          (3, 'a', 4),
+                          (3, 'b', 5),
+                          (3, 'c', 3),
+                          (4, 'a', 5),
+                          (4, 'b', 5),
+                          (4, 'c', 4),
+                          (5, 'a', 5),
+                          (5, 'b', 5),
+                          (5, 'c', 5)],
+                 start = 0,
+                 final = [4]
+               }
 
 
 fa_part_c :: FA
-fa_part_c = dummy
+fa_part_c = FA { states = [0, 1, 2, 3, 4, 5, 6, 7, 8],
+                 alphabet = ['a', 'b', 'c'],
+                 delta = [(0, 'a', 1),
+                          (0, 'b', 4),
+                          (0, 'c', 0),
+                          (1, 'a', 2),
+                          (1, 'b', 5),
+                          (1, 'c', 1),
+                          (2, 'a', 3),
+                          (2, 'b', 6),
+                          (2, 'c', 2),
+                          (3, 'a', 8),
+                          (3, 'b', 7),
+                          (3, 'c', 3),
+                          (4, 'a', 5),
+                          (4, 'b', 8),
+                          (4, 'c', 4),
+                          (5, 'a', 6),
+                          (5, 'b', 8),
+                          (5, 'c', 5),
+                          (6, 'a', 7),
+                          (6, 'b', 8),
+                          (6, 'c', 6),
+                          (7, 'a', 8),
+                          (7, 'b', 8),
+                          (7, 'c', 7),
+                          (8, 'a', 8),
+                          (8, 'b', 8),
+                          (8, 'c', 8)],
+                 start = 0,
+                 final = [7]
+               }
 
 
 fa_part_d :: FA
-fa_part_d = dummy
+fa_part_d = FA { states = [0, 1, 2, 3, 4],
+                 alphabet = ['a', 'b', 'c'],
+                 delta = [(0, 'a', 1),
+                          (0, 'b', 2),
+                          (0, 'c', 0),
+                          (1, 'a', 0),
+                          (1, 'b', 3),
+                          (1, 'c', 1),
+                          (2, 'a', 3),
+                          (2, 'b', 0),
+                          (2, 'c', 2),
+                          (3, 'a', 4),
+                          (3, 'b', 1),
+                          (3, 'c', 3),
+                          (4, 'a', 3),
+                          (4, 'b', 0),
+                          (4, 'c', 4)],
+                 start = 0,
+                 final = [1]
+               }
 
 
 fa_part_e :: FA
-fa_part_e = dummy
+fa_part_e = FA { states = [0, 1, 2, 3, 4, 5, 6],
+                 alphabet = ['a', 'b', 'c'],
+                 delta = [(0, 'a', 1),
+                          (0, 'b', 3),
+                          (0, 'c', 6),
+                          (1, 'a', 0),
+                          (1, 'b', 4),
+                          (1, 'c', 6),
+                          (2, 'a', 5),
+                          (2, 'b', 0),
+                          (2, 'c', 6),
+                          (3, 'a', 4),
+                          (3, 'b', 2),
+                          (3, 'c', 6),
+                          (4, 'a', 3),
+                          (4, 'b', 5),
+                          (4, 'c', 6),
+                          (5, 'a', 2),
+                          (5, 'b', 1),
+                          (5, 'c', 6),
+                          (6, 'a', 6),
+                          (6, 'b', 6),
+                          (6, 'c', 6)],
+                 start = 0,
+                 final = [0]
+               }
 
 
 
@@ -153,12 +274,15 @@ fa_part_e = dummy
 
 makeFunction :: [(Int, b)] -> b -> Int -> b
 makeFunction ts def a =
-  error "Not implemented"
-
+  case lookup a ts of
+    Nothing -> def 
+    Just output -> output
+    
 
 functionGraph :: (Int -> b) -> [Int] -> [(Int, b)]
-functionGraph f domain =
-  error "Not implemented"
+functionGraph _ [] = []
+functionGraph f (v:domain) = (v, f v) : functionGraph f domain
+
 
   
 {-
