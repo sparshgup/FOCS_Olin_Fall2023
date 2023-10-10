@@ -31,6 +31,14 @@ before submitting it. It has to load without any errors.
 
 -}
 
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Eta reduce" #-}
+{-# HLINT ignore "Use tuple-section" #-}
+{-# HLINT ignore "Use when" #-}
+{-# HLINT ignore "Use guards" #-}
+{-# HLINT ignore "Redundant bracket" #-}
+{-# HLINT ignore "Avoid lambda" #-}
+{-# HLINT ignore "Use putStrLn" #-}
 
 {-
  -  The type of a finite automaton
@@ -96,76 +104,89 @@ faLastabc = FA { states = [0, 1, 2, 3],
 
 set :: [Int] -> [Int]
 set xs =
-  error "Not implemented"
+  case xs of
+    [] -> []
+    (x:xs')
+      | x `elem` xs' -> set xs'
+      | otherwise    -> x : set xs'
 
 
 setSub :: [Int] -> [Int] -> Bool
 setSub xs ys =
-  error "Not implemented"
+  case xs of
+    []      -> True
+    (x:xs') -> (x `elem` ys) && setSub xs' ys
 
 
 setEqual :: [Int] -> [Int] -> Bool
-setEqual xs ys =
-  error "Not implemented"
+setEqual xs ys = setSub xs ys && setSub ys xs
 
 
 setUnion :: [Int] -> [Int] -> [Int]
 setUnion xs ys =
-  error "Not implemented"
+  case xs of
+    []      -> set ys
+    (x:xs') -> if x `elem` ys
+               then setUnion xs' ys
+               else x : setUnion xs' ys
+
 
 
 setInter :: [Int] -> [Int] -> [Int]
 setInter xs ys =
-  error "Not implemented"
-
+  case xs of
+    [] -> []
+    (x:xs') -> if x `elem` ys
+               then x : setInter xs' ys
+               else setInter xs' ys
 
 {- QUESTION 2 -}
 
 mapFunctions :: [a -> b] -> a -> [b]
-mapFunctions fs x =
-  error "Not implemented"
+mapFunctions fs x = map ($ x) fs
 
 
 keepPalindromes :: String -> [String] -> [String]
-keepPalindromes s xs =
-  error "Not implemented"
+keepPalindromes s xs = filter (\x -> s ++ x == reverse (s ++ x)) xs
 
 
 incrementPositive :: [Int] -> [Int]
-incrementPositive xs =
-  error "Not implemented"
+incrementPositive xs = map (\x -> if x > 0 then x + 1 else x) (filter (> 0) xs)
 
 
 distribute :: a -> [b] -> [(a, b)]
-distribute x ys =
-  error "Not implemented"
+distribute x ys = map (\y -> (x, y)) ys
 
 
 consAll :: a -> [[a]] -> [[a]]
-consAll x xss =
-  error "Not implemented"
+consAll x xss = map (x :) xss
 
 
 {- QUESTION 3 -}
 
 hasFinal :: [Int] -> [Int] -> Bool
-hasFinal final qs =
-  error "Not implemented"
+hasFinal final qs = any (`elem` final) qs
 
 
 followSymbol :: [(Int, Char, Int)] -> [Int] -> Char -> [Int]
 followSymbol delta qs sym =
-  error "Not implemented"
+  concatMap (\q -> followSymbolFromState delta q sym) qs
+
+{- Helper function for followSymbol -}
+followSymbolFromState :: [(Int, Char, Int)] -> Int -> Char -> [Int]
+followSymbolFromState delta q sym =
+  [s | (q', sym', s) <- delta, q' == q, sym' == sym]
 
 
 followString :: [(Int, Char, Int)] -> [Int] -> [Char] -> [Int]
-followString delta qs syms =
-  error "Not implemented"
+followString delta qs [] = qs
+followString delta qs (sym:syms) =
+  let nextStates = followSymbol delta qs sym
+  in followString delta nextStates syms
 
 
 accept :: FA -> String -> Bool
-accept m input =
-  error "Not implemented"
+accept m input = hasFinal (final m) (followString (delta m) [start m] input)
 
 
 
