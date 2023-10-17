@@ -325,7 +325,7 @@ tm_palindrome = let d sym state =
                         (_, c) -> (666, c, 1) in
                 TM { states = [1, 2, 3, 4, 5, 6, 666, 777],
                       inputAlpha = ['a', 'b'],
-                      tapeAlpha = ['a', 'b', '_'],
+                      tapeAlpha = ['a', 'b', 'X', 'Y', '_'],
                       start = 1,
                       accept = 777,
                       reject = 666,
