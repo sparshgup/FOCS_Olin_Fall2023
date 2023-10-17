@@ -30,9 +30,15 @@ before submitting it. It has to load without any errors.
 --------------------------------------------------
 
 -}
+{-# OPTIONS_GHC -Wno-overlapping-patterns #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Eta reduce" #-}
+{-# HLINT ignore "Use camelCase" #-}
 
 
 import Control.Monad
+import Distribution.Simple.Utils (xargs)
+import Data.Text (replace)
 
 -- Type for deterministic Turing machines.
 -- States are integers.
@@ -141,33 +147,54 @@ anbncn = let d sym state =
 -- QUESTION 1
 
 startConfig :: TM -> String -> Config
-startConfig m input =
-  error "Not implemented"
+startConfig m input = Config { state = start m,
+                               tape = input,
+                               position = 1
+                             }
 
 
 isAcceptConfig :: TM -> Config -> Bool
-isAcceptConfig m c =
-  error "Not implemented"
+isAcceptConfig m c = state c == accept m
 
 
 isRejectConfig :: TM -> Config -> Bool
-isRejectConfig m c =
-  error "Not implemented"
+isRejectConfig m c = state c == reject m
 
 
 getNth :: [a] -> Int -> a
-getNth init pos =
-  error "Not implemented"
+getNth init pos
+  | pos < 1 || pos > length init = error "Out of bounds"
+  | otherwise = init !! (pos - 1)
 
 
 replaceNth :: [a] -> Int -> a -> [a]
-replaceNth init pos sym =
-  error "Not implemented"
+replaceNth init pos sym
+  | pos < 1 || pos > length init = error "Out of bounds"
+  | otherwise = take (pos - 1) init ++ [sym] ++ drop pos init
 
 
 step :: TM -> Config -> Config
 step m c =
-  error "Not implemented"
+  let currentState = state c
+      currentPosition = position c
+      currentTape = tape c
+
+      readSymbol = if currentPosition <= length currentTape 
+        then tape c !! (currentPosition - 1) 
+        else '_'
+
+      (newState, writeSymbol, moveDirection) = delta m currentState readSymbol
+
+      newTape = if currentPosition <= length currentTape
+        then replaceNth currentTape currentPosition writeSymbol
+        else tape c ++ replicate (currentPosition - length currentTape - 1) '_' ++ [writeSymbol]
+
+      newPosition = if moveDirection == 1 then currentPosition + 1 else currentPosition - 1
+
+  in Config { state = newState,
+              tape = newTape,
+              position = newPosition }
+
 
 
 -- Functions to "run" a Turing machine on a given string.
@@ -239,32 +266,88 @@ dummy = TM { states = [0, 1],
              reject = 0,
              delta = \q -> \s -> (q, s, -1)}
 
+
 tm_ab3 :: TM
-tm_ab3 = dummy
+tm_ab3 = let d sym state =
+              case (sym, state) of
+                (1, 'a') -> (2, 'X', 1)
+                (1, '_') -> (777, '_', 1)
+                (2, 'a') -> (2, 'a', 1)
+                (2, 'Y') -> (2, 'Y', 1)
+                (2, 'b') -> (3, 'Y', 1)
+                (3, 'b') -> (4, 'Y', 1)
+                (4, 'b') -> (4, 'Y', -1)
+                (4, 'Y') -> (4, 'Y', -1)
+                (4, 'a') -> (5, 'a', -1)
+                (4, 'X') -> (6, 'X', 1)
+                (5, 'X') -> (1, 'X', 1)
+                (5, 'a') -> (5, 'a', -1)
+                (6, 'Y') -> (6, 'Y', 1)
+                (6, '_') -> (777, '_', 1)
+                (_, c) -> (666, c, 1) in
+         TM { states = [1, 2, 3, 4, 5, 6, 777, 666],
+              inputAlpha = ['a', 'b'],
+              tapeAlpha = ['a', 'b', 'X', 'Y', '_'],
+              start = 1,
+              accept = 777,
+              reject = 666,
+              delta = d }
 
 
 tm_palindrome :: TM
-tm_palindrome = dummy
-
+tm_palindrome = let d sym state =
+                      case (sym, state) of
+                        (1, 'a') -> (2, 'X', 1)
+                        (1, 'b') -> (3, 'Y', 1)
+                        (1, 'X') -> (777, 'X', 1)
+                        (1, 'Y') -> (777, 'Y', 1)
+                        (1, '_') -> (777, '_', 1)
+                        (2, 'a') -> (2, 'a', 1)
+                        (2, 'b') -> (2, 'b', 1)
+                        (2, 'X') -> (4, 'X', -1)
+                        (2, 'Y') -> (4, 'Y', -1)
+                        (2, '_') -> (4, '_', -1)
+                        (3, 'a') -> (3, 'a', 1)
+                        (3, 'b') -> (3, 'b', 1)
+                        (3, 'X') -> (5, 'X', -1)
+                        (3, 'Y') -> (5, 'Y', -1)
+                        (3, '_') -> (5, '_', -1)
+                        (4, 'a') -> (6, 'X', -1)
+                        (4, 'X') -> (777, 'X', 1)
+                        (4, 'Y') -> (777, 'Y', 1)
+                        (5, 'b') -> (6, 'Y', -1)
+                        (5, 'X') -> (777, 'X', 1)
+                        (5, 'Y') -> (777, 'Y', 1)
+                        (6, 'a') -> (6, 'a', -1)
+                        (6, 'b') -> (6, 'b', -1)
+                        (6, 'X') -> (1, 'X', 1)
+                        (6, 'Y') -> (1, 'Y', 1)
+                        (_, c) -> (666, c, 1) in
+                TM { states = [1, 2, 3, 4, 5, 6, 666, 777],
+                      inputAlpha = ['a', 'b'],
+                      tapeAlpha = ['a', 'b', '_'],
+                      start = 1,
+                      accept = 777,
+                      reject = 666,
+                      delta = d }
 
 
 -- QUESTION 3
 
 compose :: [a -> a] -> (a -> a)
-compose fs =
-  error "Not implemented"
+compose fs = foldr (.) id fs
 
 
 prefixes :: [a] -> [[a]]
-prefixes xs =
-  error "Not implemented"
+prefixes xs = foldr (\x xss -> [] : map (x :) xss) [[]] xs
 
 
 suffixes :: [a] -> [[a]]
-suffixes xs =
-  error "Not implemented"
+suffixes xs = foldr (\x xss -> xs : xss) [[]] xs
 
 
 maxElement :: [Int] -> Int -> Int
 maxElement xs def =
-  error "Not implemented"
+  case (xs, def) of
+    ([], def) -> def
+    _         -> foldr max (head xs) xs
