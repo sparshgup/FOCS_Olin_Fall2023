@@ -30,6 +30,8 @@ before submitting it. It has to load without any errors.
 --------------------------------------------------
 
 -}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use camelCase" #-}
 
 import Control.Monad
 import Text.Printf
@@ -66,33 +68,53 @@ data Config = Config { state :: Int,
 -- Copy your functions from homework 4!
 
 startConfig :: TM -> String -> Config
-startConfig m input =
-  error "Copy your functions from homework 4!"
+startConfig m input = Config { state = start m,
+                               tape = input,
+                               position = 1
+                             }
 
 
 isAcceptConfig :: TM -> Config -> Bool
-isAcceptConfig m c =
-  error "Copy your functions from homework 4!"
+isAcceptConfig m c = state c == accept m
 
 
 isRejectConfig :: TM -> Config -> Bool
-isRejectConfig m c =
-  error "Copy your functions from homework 4!"
+isRejectConfig m c = state c == reject m
 
 
 getNth :: [Char] -> Int -> Char
-getNth init pos =
-  error "Copy your functions from homework 4!"
+getNth init pos
+  | pos < 1 || pos > length init = error "Out of bounds"
+  | otherwise = init !! (pos - 1)
 
 
 replaceNth :: [Char] -> Int -> Char -> [Char]
-replaceNth init pos sym =
-  error "Copy your functions from homework 4!"
+replaceNth init pos sym
+  | pos < 1 || pos > length init = error "Out of bounds"
+  | otherwise = take (pos - 1) init ++ [sym] ++ drop pos init
 
 
 step :: TM -> Config -> Config
 step m c =
-  error "Copy your functions from homework 4!"
+  let currentState = state c
+      currentPosition = position c
+      currentTape = tape c
+
+      readSymbol = if currentPosition <= length currentTape
+        then tape c !! (currentPosition - 1)
+        else '_'
+
+      (newState, writeSymbol, moveDirection) = delta m currentState readSymbol
+
+      newTape = if currentPosition <= length currentTape
+        then replaceNth currentTape currentPosition writeSymbol
+        else tape c ++ replicate (currentPosition - length currentTape - 1) '_' ++ [writeSymbol]
+
+      newPosition = if moveDirection == 1 then currentPosition + 1 else currentPosition - 1
+
+  in Config { state = newState,
+              tape = newTape,
+              position = newPosition }
 
 
 -- Function to "run" a Turing machine on a given string.
@@ -158,16 +180,142 @@ dummyTM = TM { states = [0, 1],
 
 
 tm_not :: TM
-tm_not = dummyTM
+tm_not = let d state sym =
+              case (state, sym) of
+                (1, '#') -> (2, '#', 1)
+                (2, '1') -> (3, 'X', 1)
+                (2, '0') -> (4, 'X', 1)
+                (2, 'X') -> (2, 'X', 1)
+                (2, '#') -> (2, '#', 1)
+                (2, '_') -> (777, '_', 1)
+                (3, '0') -> (3, '0', 1)
+                (3, '1') -> (3, '1', 1)
+                (3, '#') -> (5, '#', 1)
+                (3, '_') -> (666, '_', 1)
+                (4, '0') -> (4, '0', 1)
+                (4, '1') -> (4, '1', 1)
+                (4, '#') -> (6, '#', 1)
+                (4, '_') -> (666, '_', 1)
+                (5, '0') -> (7, 'X', -1)
+                (5, '1') -> (666, '1', 1)
+                (5, 'X') -> (5, 'X', 1)
+                (6, '0') -> (666, '0', 1)
+                (6, '1') -> (7, 'X', -1)
+                (6, 'X') -> (6, 'X', 1)
+                (7, 'X') -> (7, 'X', -1)
+                (7, '#') -> (8, '#', -1)
+                (8, '0') -> (8, '0', -1)
+                (8, '1') -> (8, '1', -1)
+                (8, 'X') -> (2, 'X', 1)
+                (_, c) -> (666, c, 1) in
+         TM { states = [1, 2, 3, 4, 5, 6, 7, 8, 666, 777],
+              inputAlpha = ['0', '1', '#'],
+              tapeAlpha = ['0', '1', '#', 'X', '_'],
+              start = 1,
+              accept = 777,
+              reject = 666,
+              delta = d }
 
 
 tm_or :: TM
-tm_or = dummyTM
+tm_or =  let d state sym =
+              case (state, sym) of
+                (1, '#') -> (2, '#', 1)
+                (2, '0') -> (3, 'X', 1)
+                (2, '1') -> (10, 'X', 1)
+                (2, 'X') -> (2, 'X', 1)
+                (2, '#') -> (2, '#', 1)
+                (2, '_') -> (777, '_', 1)
+                (3, '0') -> (3, '0', 1)
+                (3, '1') -> (3, '1', 1)
+                (3, '#') -> (4, '#', 1)
+                (4, '0') -> (13, 'X', 1)
+                (4, '1') -> (5, 'X', 1)
+                (4, 'X') -> (4, 'X', 1)
+                (5, '0') -> (5, '0', 1)
+                (5, '1') -> (5, '1', 1)
+                (5, '#') -> (6, '#', 1)
+                (6, '0') -> (666, '0', 1)
+                (6, '1') -> (7, 'X', -1)
+                (6, 'X') -> (6, 'X', 1)
+                (7, '#') -> (8, '#', -1)
+                (7, 'X') -> (7, 'X', -1)
+                (8, '0') -> (8, '0', -1)
+                (8, '1') -> (8, '1', -1)
+                (8, 'X') -> (8, 'X', -1)
+                (8, '#') -> (9, '#', -1)
+                (9, '0') -> (9, '0', -1)
+                (9, '1') -> (9, '1', -1)
+                (9, 'X') -> (2, 'X', 1)
+                (10, '0') -> (10, '0', 1)
+                (10, '1') -> (10, '1', 1)
+                (10, '#') -> (11, '#', 1)
+                (11, '0') -> (12, 'X', 1)
+                (11, '1') -> (12, 'X', 1)
+                (11, 'X') -> (11, 'X', 1)
+                (12, '0') -> (12, '0', 1)
+                (12, '1') -> (12, '1', 1)
+                (12, '#') -> (6, '#', 1)
+                (13, '0') -> (13, '0', 1)
+                (13, '1') -> (13, '1', 1)
+                (13, '#') -> (14, '#', 1)
+                (14, 'X') -> (14, 'X', 1)
+                (14, '0') -> (7, 'X', -1)
+                (_, c) -> (666, c, 1) in
+         TM { states = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 666, 777],
+              inputAlpha = ['0', '1', '#'],
+              tapeAlpha = ['0', '1', '#', 'X', '_'],
+              start = 1,
+              accept = 777,
+              reject = 666,
+              delta = d }
 
 
 tm_increment :: TM
-tm_increment = dummyTM
-
+tm_increment = let d state sym =
+                    case (state, sym) of
+                      (1, '#') -> (2, '#', 1)
+                      (2, '0') -> (2, '0', 1)
+                      (2, '1') -> (2, '1', 1)
+                      (2, 'X') -> (2, 'X', 1)
+                      (2, '#') -> (3, '#', -1)
+                      (3, '0') -> (4, 'X', 1)
+                      (3, '1') -> (8, 'X', 1)
+                      (3, 'X') -> (3, 'X', -1)
+                      (3, '#') -> (777, '#', 1)
+                      (4, '#') -> (5, '#', 1)
+                      (4, 'X') -> (4, 'X', 1)
+                      (5, '0') -> (5, '0', 1)
+                      (5, '1') -> (5, '1', 1)
+                      (5, 'X') -> (11, 'X', -1)
+                      (5, '_') -> (6, '_', -1)
+                      (6, '1') -> (7, 'X', -1)
+                      (6, 'X') -> (6, 'X', 1)
+                      (7, '#') -> (3, '#', -1)
+                      (7, '0') -> (7, '0', -1)
+                      (7, '1') -> (7, '1', -1)
+                      (8, 'X') -> (8, 'X', 1)
+                      (8, '#') -> (9, '#', 1)
+                      (9, '0') -> (9, '0', 1)
+                      (9, '1') -> (9, '1', 1)
+                      (9, 'X') -> (10, 'X', -1)
+                      (9, '_') -> (12, '_', -1)
+                      (10, '0') -> (13, 'X', -1)
+                      (10, '1') -> (7, 'X', -1)
+                      (11, '0') -> (7, 'X', -1)
+                      (12, '0') -> (7, 'X', -1)
+                      (13, '0') -> (13, '0', -1)
+                      (13, '1') -> (14, '1', -1)
+                      (14, '1') -> (14, '1', -1)
+                      (14, '#') -> (3, '#', -1)
+                      (_, c) -> (666, c, 1) in
+         TM { states = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 666, 777],
+              inputAlpha = ['0', '1', '#'],
+              tapeAlpha = ['0', '1', '#', 'X', '_'],
+              start = 1,
+              accept = 777,
+              reject = 666,
+              delta = d }
 
 tm_add :: TM
 tm_add = dummyTM
@@ -299,36 +447,136 @@ dummyRMP = RMP [] [FALSE]
 
 
 p_add :: RMP
-p_add = dummyRMP
+p_add = RMP ["X", "Y", "Z"] [
+    DEC ("X", 3),
+    INC "Y",
+    JUMP 0,
+    DEC ("Y", 6),
+    DEC ("Z", 7),
+    JUMP 3,
+    DEC ("Z", 8),
+    FALSE,
+    TRUE
+  ]
 
 
 p_sub :: RMP
-p_sub = dummyRMP
+p_sub = RMP ["X", "Y", "Z"] [
+    DEC ("Y", 3),
+    DEC ("X", 3),
+    JUMP 0,
+    EQUAL ("X", "Z"),
+    FALSE,
+    TRUE
+  ]
 
 
 p_max :: RMP
-p_max = dummyRMP
+p_max = RMP ["X", "Y", "Z"] [
+    DEC ("X", 6),
+    DEC ("Y", 4),
+    DEC ("Z", 6),
+    JUMP 0,
+    INC "X",
+    EQUAL ("X", "Z"),
+    EQUAL ("Y", "Z"),
+    FALSE,
+    TRUE
+  ]
 
 
 p_diff :: RMP
-p_diff = dummyRMP
-
+p_diff = RMP ["X", "Y", "Z"] [
+    DEC ("X", 5),
+    DEC ("Y", 3),
+    JUMP 0,
+    INC "X",
+    EQUAL ("X", "Z"),
+    EQUAL ("Y", "Z"),
+    FALSE,
+    TRUE
+  ]
 
 
 -- QUESTION 3
 
 
 p_mult :: RMP
-p_mult = dummyRMP
+p_mult = RMP ["X", "Y", "Z", "P", "T"] [
+    DEC ("P", 2),
+    JUMP 0,
+    DEC ("T", 4),
+    JUMP 2,
+    DEC ("X", 12),
+    DEC ("Y", 9),
+    INC "P",
+    INC "T",
+    JUMP 5,
+    DEC ("T", 4),
+    INC "Y",
+    JUMP 9,
+    DEC ("P", 15),
+    DEC ("Z", 16),
+    JUMP 12,
+    DEC ("Z", 17),
+    FALSE,
+    TRUE
+  ]
 
 
 p_double :: RMP
-p_double = dummyRMP
+p_double = RMP ["X", "Y", "T", "P", "R"] [
+    INC "T",
+    INC "T",
+    DEC ("P", 4),
+    JUMP 2,
+    DEC ("R", 6),
+    JUMP 4,
+    DEC ("X", 14),
+    DEC ("T", 11),
+    INC "P",
+    INC "R",
+    JUMP 7,
+    DEC ("R", 6),
+    INC "T",
+    JUMP 11,
+    DEC ("P", 17),
+    DEC ("Y", 18),
+    JUMP 14,
+    DEC ("Y", 19),
+    FALSE, 
+    TRUE
+  ]
 
 
 p_square :: RMP
-p_square = dummyRMP
+p_square = RMP ["X", "Y", "T", "P", "R", "X0"] [
+    DEC ("X", 4),
+    INC "T",
+    INC "X0",
+    JUMP 0,
+    DEC ("P", 6),
+    JUMP 4,
+    DEC ("R", 8),
+    JUMP 6,
+    DEC ("X0", 16),
+    DEC ("T", 13),
+    INC "P",
+    INC "R",
+    JUMP 9,
+    DEC ("R", 7),
+    INC "T",
+    JUMP 13,
+    DEC ("P", 19),
+    DEC ("Y", 20),
+    JUMP 16,
+    DEC ("Y", 21),
+    FALSE,
+    TRUE
+  ]
 
 
 p_cube :: RMP
-p_cube = dummyRMP
+p_cube = RMP [] [
+
+  ]
