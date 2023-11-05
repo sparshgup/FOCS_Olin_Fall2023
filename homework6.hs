@@ -6,9 +6,9 @@ HOMEWORK 6
 
 Due: Sun, Nov 12, 2023 (23h59)
 
-Name:
+Name: Sparsh Gupta
 
-Email:
+Email: sgupta1@olin.edu
 
 Remarks, if any:
 
@@ -30,11 +30,18 @@ before submitting it. It has to load without any errors.
 --------------------------------------------------
 
 -}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use camelCase" #-}
+{-# HLINT ignore "Redundant bracket" #-}
+{-# HLINT ignore "Redundant lambda" #-}
+{-# HLINT ignore "Replace case with fromMaybe" #-}
 
 
 import qualified Data.Set as Set
 import Text.Printf
 import System.IO.Unsafe
+import Distribution.Simple.Utils (xargs)
+import Control.Monad (join)
 
 
 -- QUESTION 1
@@ -42,34 +49,43 @@ import System.IO.Unsafe
 type Partial b = String -> Maybe b
 
 null_partial :: Partial b
-null_partial =
-  error "Not implemented"
+null_partial = const Nothing
 
 
 extend_partial :: String -> b -> (Partial b) -> Partial b
-extend_partial arg value p =
-  error "Not implemented"
+extend_partial arg value p input = if input == arg
+      then Just value
+      else p input
 
 
 join_partial :: (Partial b) -> (Partial b) -> Partial b
-join_partial p1 p2 =
-  error "Not implemented"
-
+join_partial p1 p2 = \input ->
+  case p1 input of
+    Just x -> Just x
+    Nothing -> p2 input
+  
 
 default_partial :: b -> (Partial b) -> (String -> b)
-default_partial b p =
-  error "Not implemented"
+default_partial b p = \input ->
+  case p input of
+    Just x -> x
+    Nothing -> b
 
 
 fail_partial :: (Partial b) -> (String -> b)
-fail_partial p =
-  error "Not implemented"
+fail_partial p = \input ->
+  case p input of
+    Just x -> x
+    Nothing -> error "undefined"
 
 
 dict :: [(String, b)] -> (String -> b)
-dict pairs =
-  error "Not implemented"
-
+dict pairs = fail_partial lookup_partial
+  where
+    lookup_partial = join_partial_all $ map (\(k, v) -> extend_partial k v null_partial) pairs
+    join_partial_all [] = null_partial
+    join_partial_all (p:pairs) = join_partial p (join_partial_all pairs)
+  
 
 
 -- QUESTION 2
@@ -245,23 +261,75 @@ dummy_cfg = CFG {
 
 
 q2_part_a :: CFG
-q2_part_a = dummy_cfg
+q2_part_a = CFG {
+  cfg_nterms = ['S', 'T', 'U', 'W'],
+  cfg_terms = ['a', 'b', 'c'],
+  cfg_rules = [('S', "TWU"),
+               ('W', ""),
+               ('W', "TU"),
+               ('T', ""),
+               ('T', "aTb"),
+               ('U', ""),
+               ('U', "bUc")],
+  cfg_start = 'S'
+}
 
 
 q2_part_b :: CFG
-q2_part_b = dummy_cfg
-
+q2_part_b = CFG {
+  cfg_nterms = ['S', 'T', 'U', 'W'],
+  cfg_terms = ['a', 'b', 'c'],
+  cfg_rules = [('S', "TW"),
+               ('W', "U"),
+               ('W', ""),
+               ('T', ""),
+               ('T', "aTUc"),
+               ('U', ""),
+               ('U', "bUc")],
+  cfg_start = 'S'
+}
 
 q2_part_c :: CFG
-q2_part_c = dummy_cfg
+q2_part_c = CFG {
+  cfg_nterms = ['S', 'T', 'U', 'W'],
+  cfg_terms = ['a', 'b', 'c'],
+  cfg_rules = [('S', "TWU"),
+               ('W', ""),
+               ('W', "TU"),
+               ('T', ""),
+               ('T', "aaTb"),
+               ('U', ""),
+               ('U', "bUc")],
+  cfg_start = 'S'
+}
 
 
 q2_part_d :: CFG
-q2_part_d = dummy_cfg
-
+q2_part_d = CFG {
+  cfg_nterms = ['S', 'T', 'U', 'W'],
+  cfg_terms = ['a', 'b', 'c'],
+  cfg_rules = [('S', "TUW"),
+               ('W', ""),
+               ('W', "UTS"),
+               ('T', ""),
+               ('T', "aTb"),
+               ('U', ""),
+               ('U', "bUa")],
+  cfg_start = 'S'
+}
 
 q2_part_e :: CFG
-q2_part_e = dummy_cfg
+q2_part_e = CFG {
+  cfg_nterms = ['S', 'T', 'U', 'W'],
+  cfg_terms = ['1', '+', '='],
+  cfg_rules = [('S', "W"),
+               ('W', "TU"),
+               ('W', "1W1"),
+               ('T', "+"),
+               ('U', "="),
+               ('U', "1U1")],
+  cfg_start = 'S'
+}
 
 
 -- QUESTION 3
