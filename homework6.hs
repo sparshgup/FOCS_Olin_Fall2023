@@ -384,26 +384,108 @@ dummy_grammar = Grammar {
 
 
 q3_part_a :: Grammar
-q3_part_a = dummy_grammar
+q3_part_a = Grammar {
+  nterms = ['S', 'A', 'B', 'C', 'X'],
+  terms = ['a', 'b', 'c', 'd'],
+  rules = [ ("S", ""),
+            ("S", "ABC"),
+            ("C", "XcCd"),
+            ("C", ""),
+            ("AB", "AABB"),
+            ("AX", "a"),
+            ("BX", "bX"),
+            ("aX", "Xa"),
+            ("bX", "Xb"),
+            ("cX", "Xc")],
+  start = 'S'
+}
 
 
 -- Please put your sequence of rewrites for the string aabbccdd here
 
-rewrites_part_a_2 = []
+-- Run this by using "generate q3_part_a "aabbccdd" 10 rewrites_part_a_2"
+-- Note: Using depth > 10 takes less than 1 seconds with the following rewrites.
+
+rewrites_part_a_2 = ["S", 
+                     "ABC",
+                     "AABBC",
+                     "AABBXcCd",
+                     "AABBXcXcCdd",
+                     "AABBXcXcdd"]
 
 -- Please put your sequence of rewrites for the string aaabbbcccddd here
 
-rewrites_part_a_3 = []
+-- Run this by using "generate q3_part_a "aaabbbcccddd" 20 rewrites_part_a_3"
+-- Note: Using depth > 20 takes almost 2 seconds with the following rewrites.
+
+rewrites_part_a_3 = ["S", 
+                     "ABC",
+                     "AABBC",
+                     "AAABBBC",
+                     "AAABBBXcCd",
+                     "AAABBBXcXcCdd",
+                     "AAABBBXcXcXcCddd",
+                     "AAABBBXcXcXcddd",
+                     "AAABBBXcXXccddd",
+                     "AAABBBXXcXccddd",
+                     "AAABBBXXXcccddd"]
 
 
 q3_part_b :: Grammar
-q3_part_b = dummy_grammar
+q3_part_b = Grammar {
+  nterms = ['S', 'A', 'B', 'X', 'Y', 'W'],
+  terms = ['a', 'b'],
+  rules = [ ("S", ""),
+            ("S", "W"),
+            ("W", "A"),
+            ("W", "B"),
+            ("A", "AA"),
+            ("A", "AB"),
+            ("B", "BB"),
+            ("B", "BA"),
+            ("A", "Xa"),
+            ("B", "Yb"),
+            ("Xa", "aX"),
+            ("Ya", "aY"),
+            ("XbY", "bXY"),
+            ("XbX", "bXX"),
+            ("Yb", "bY"),
+            ("X", "a"),
+            ("Y", "b")],
+  start = 'S'
+}
 
 
 -- Please put your sequence of rewrites for the string abaaabaa here
 
-rewrites_part_b_abaa = []
+-- Run this by using "generate q3_part_b "abaaabaa" 10 rewrites_part_b_abaa"
+-- Note: Using depth > 10 takes almost 2 seconds with the following rewrites.
+
+rewrites_part_b_abaa = ["S",
+                        "W",
+                        "A",
+                        "AB",
+                        "ABA",
+                        "ABAA",
+                        "XaBAA",
+                        "XaYbAA",
+                        "XaYbXaA",
+                        "XaYbXaXa"]
 
 -- Please put your sequence of rewrites for the string aabbbaabbb here
 
-rewrites_part_b_aabbb = []
+-- Run this by using "generate q3_part_b "aabbbaabbb" 15 rewrites_part_b_aabbb"
+-- Note: Using depth > 15 takes almost 3 seconds with the following rewrites.
+
+rewrites_part_b_aabbb = ["S",
+                         "W",
+                         "A",
+                         "AB",
+                         "AAB",
+                         "AABB",
+                         "AABBB",
+                         "XaABBB",
+                         "XaXaBBB",
+                         "XaXaYbBB",
+                         "XaXaYbYbB",
+                         "XaXaYbYbYb"]
