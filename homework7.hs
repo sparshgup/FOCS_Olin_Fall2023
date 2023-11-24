@@ -8,7 +8,7 @@ Due: Thu, Nov 30, 2023 (23h59)
 
 Name: Sparsh Gupta
 
-Email:
+Email: sgupta1@olin.edu
 
 Remarks, if any:
 
@@ -237,26 +237,34 @@ qdefs = [
     
     -- QUESTION 1
 
-    ("and", "not_implemented"),
-    ("or", "not_implemented"),
-    ("not", "not_implemented"),
-    ("minus", "not_implemented"),
-    ("ge", "not_implemented"),
-    ("gt", "not_implemented"),
-    ("max", "not_implemented"),
-    ("min", "not_implemented"),
+    ("and", "(/a -> /b -> a b false)"),
+    ("or", "(/a -> /b -> a true b)"),
+    ("not", "(/a -> a false true)"),
+    ("minus", "(/m -> /n -> n pred m)"),
+    ("ge", "(/m -> /n -> iszero (minus n m))"),
+    ("gt", "(/m -> /n -> not (iszero (minus m n)))"),
+    ("max", "(/m -> /n -> if (ge m n) m n)"),
+    ("min", "(/m -> /n -> if (ge n m) m n)"),
 
     -- QUESTION 2
     
-    ("int", "not_implemented"),
-    ("neg_int", "not_implemented"),
-    ("abs_int", "not_implemented"),
-    ("plus_int", "not_implemented"),
+    ("int", "(/n -> pair true n)"),
+    ("neg_int", 
+    "(/n -> if (iszero (second n)) (int _0) (pair (not (first n)) (second n)))"),
+    ("abs_int", "(/n -> if (first n) n (neg_int n))"),
+    ("plus_int", 
+    "(/m -> /n -> \
+      \if (first m) (if (first n) (int (plus (second m) (second n))) \
+      \(if (ge (second m) (second n)) (int (minus (second m) (second n))) \
+      \(neg_int (int (minus (second n) (second m)))))) \
+      \(if (first n) (if (ge (second n) (second m)) (int (minus (second n) (second m))) \
+      \(neg_int (int (minus (second m) (second n))))) \
+      \(neg_int (int (plus (second m) (second n))))))"),
 
     -- QUESTION 3    
 
-    ("default", "not_implemented"),
-    ("either", "not_implemented"),
-    ("sum", "not_implemented"),
-    ("nth", "not_implemented")
+    ("default", "(/opt -> /v -> opt (/x -> x) v)"),
+    ("either", "(/f -> (/g -> (/x -> if (iszero (f x)) (g x) (f x))))"),
+    ("sum", "Theta (/sumTemp -> (/lst -> lst (/x -> (/xs -> plus x (sumTemp xs))) _0))"),
+    ("nth", "Theta (/nthTemp -> (/n -> (/lst -> lst (/x -> (/xs -> if (iszero n) x (nthTemp (pred n) xs))) false)))")
   ]
