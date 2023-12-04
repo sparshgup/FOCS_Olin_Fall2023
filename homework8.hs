@@ -6,9 +6,9 @@ HOMEWORK 8
 
 Due: Sun, Dec 10, 2023 (23h59)
 
-Name:
+Name: Sparsh Gupta
 
-Email:
+Email: sgupta1@olin.edu
 
 Remarks, if any:
 
@@ -107,28 +107,27 @@ dsqrt v x = 2 * x
 {- QUESTION 1 -}
 
 mult :: [Int] -> [Int] -> [Int]
-mult s t =
-  error "not implemented"
+mult = map2 (*)
 
 
 mult2 :: [Int] -> [Int] -> [Int]
-mult2 s t =
-  error "not implemented"
-
+mult2 s t =  map2 (*) s (cycle (take 2 t))
 
 stutter :: [a] -> [a]
-stutter s =
-  error "not implemented"
+stutter = concatMap (\x -> [x, x])
 
 
 stairs :: [a] -> [a]
-stairs s =
-  error "not implemented"
+stairs s = concatMap (uncurry replicate) (zip [1..] s)
 
+
+-- Helper func for running_max
+runningMaxHelper :: [Int] -> Int -> [Int]
+runningMaxHelper [] _ = []
+runningMaxHelper (x:xs) currentMax = max x currentMax : runningMaxHelper xs (max x currentMax)
 
 running_max :: [Int] -> [Int]
-running_max s =
-  error "not implemented"
+running_max s = runningMaxHelper s (head s)
 
 
 
@@ -140,20 +139,18 @@ psumsf s = (head s) : map2 (\x y -> x + y) (tail s) (psumsf s)
 
 
 spi :: [Double]
-spi =
-  error "not implemented"
+spi = map (\n -> sqrt 12 * sumSeries n) [1..]
+  where
+    sumSeries n = sum [(-1)^(n-1) / (fromIntegral (2 * n - 1) * (3^(n-1))) | n <- [1..n]]
 
 
 newton :: (Double -> Double) -> (Double -> Double) -> Double -> [Double]
-newton f df guess =
-  error "not implemented"
+newton f df = iterate (\xn -> xn - f xn / df xn)
 
 
 derivative :: (Double -> Double) -> Double -> [Double]
-derivative f x =
-  error "not implemented"
+derivative f x = map (\n -> (f (x + 1 / fromIntegral n) - f x) / (1 / fromIntegral n)) (tail nats)
 
 
 limit :: Double -> [Double] -> [Double]
-limit epsilon s =
-  error "not implemented"
+limit epsilon s = map fst $ filter (\(x, y) -> abs (y - x) < epsilon) $ zip s (tail s)
